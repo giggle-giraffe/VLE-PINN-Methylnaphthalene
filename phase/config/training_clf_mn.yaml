@@ -1,0 +1,100 @@
+# Configuration for Classification Neural Network Training
+# Classic training with DataLoader for large datasets
+
+model:
+  name: "mn"
+  version: "exmaple"
+  type: "classification"
+  
+  # Architecture parameters
+  hidden_dims: [16, 16, 16, 16]
+  dropout_rate: 0.5
+  l2_reg: 0.001
+
+data:
+  # System identifier for scaler path resolution
+  system: "mn"
+
+  # Data loading mode
+  # Options:
+  #   - "hdf5": Lazy loading from HDF5 (memory efficient, good for large datasets)
+  #   - "classic": Load entire dataset into memory/GPU (fastest, requires sufficient memory)
+  data_loading_mode: "classic"
+  
+  # For classic mode: where to store the data
+  # Options: "cpu" or "cuda" (if you have enough GPU memory)
+  classic_mode_device: "cuda"
+  
+  # Data files (HDF5 format required)
+  train_file: "synthetic_thermo_data.h5"
+  
+  # Input and output columns
+  input_cols:
+    - "temp"
+    - "pres"
+    - "fh2"
+    - "fs"
+    - "fa"
+    - "fb"
+    - "fc"
+    - "fd"
+  
+  target_col: "class_true"
+  
+  # Data loading parameters for HDF5
+  train_val_split: 0.5
+  max_rows: null            # Set to limit data size (null for all data)
+  num_workers: 4            # HDF5 supports efficient parallel access
+  prefetch_factor: 2        # Prefetch batches for smooth training
+  pin_memory: true          # Fast GPU transfer
+  persistent_workers: true  # Keep workers alive between epochs
+
+training:
+  # Basic parameters
+  epochs: 10000
+  batch_size: 4096
+  learning_rate: 0.01
+  
+  # Optimizer settings
+  optimizer: "adam"    # Options: adam, adamw, sgd
+  momentum: 0.9        # Only for SGD
+  
+  # Learning rate scheduler
+  scheduler: "reduce_on_plateau"  # Options: reduce_on_plateau, cosine_annealing
+  scheduler_factor: 0.5           # Factor for ReduceLROnPlateau
+  scheduler_patience: 200         # Proportionally scaled for 20K epochs
+  T_0: 10                         # For CosineAnnealingWarmRestarts
+  T_mult: 2                       # For CosineAnnealingWarmRestarts
+  min_lr: 1e-6                    # Minimum learning rate
+  
+  # Regularization
+  label_smoothing: 0.0
+  
+  # Early stopping
+  early_stopping_patience: 80
+  early_stopping_delta: 0.0001
+  
+  # Evaluation
+  eval_frequency: 50
+
+  # Class balancing
+  use_class_weights: false
+
+  # Resume from checkpoint
+  resume_checkpoint: null
+
+# Random seed for reproducibility
+random_seed: 47
+
+# Logging and monitoring
+logging:
+  log_level: "INFO"
+  save_checkpoints: true
+  checkpoint_frequency: 100
+  progress_log_interval: 10  # Log progress every N% during training (1-100)
+  validation_log_interval: 10  # Log progress every N% during validation (1-100)
+  
+# Hardware settings
+hardware:
+  use_cuda: true
+  mixed_precision: false

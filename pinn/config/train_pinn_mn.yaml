@@ -1,0 +1,187 @@
+config_model:
+  model_name: 'pinn_mn'
+  model_version: 'example'
+  num_sample_features: 9
+  num_outputs: 4
+  config_file_phase_model: 'inference_mn.yaml'
+  data_file: 'mn_data.xlsx'
+  max_num_delta_t: 16.0
+  time_batch_size: 8
+  run_mode: 'pinn+phase'
+  pinn_inputs: 'time+initials'
+  resume_from: None
+  n_epochs: 100000
+  output_scale: 1.0e-3
+  ads_a_log_min: -10.0
+  ads_a_log_range: 10.0
+  ads_dh_max: 100000.0
+  e_min: 100.0
+  rxn_a_log_min: -10.0
+  rxn_a_log_range: 10.0
+package_mode:
+  task: 'train'
+  logging_freq: 50
+  adaptive_start_epoch: 100
+  pre_training_epochs: 100
+
+curriculum_learning:
+  parameter_freezing:
+    phase_transition_epoch: 10
+    frozen_parameters: ['y_E_', 'x_A_', 'z_Delta_H_']
+
+  weight_update_frequency: 200
+  pde_auto_calibrate: true
+  gradnorm_excluded_tasks: [monotonicity, rate_decrease, min_dynamics]
+  min_rate_threshold: 1.0e-2
+  gradnorm_data_floor_mult: 0.1
+  max_pde_data_ratio: 10.0
+  gradnorm_alpha: 0.1
+  gradnorm_lr: 0.1
+  
+  target_rates:
+    data: 1.0
+    pde: 2.0
+    initial: 0.5
+    flowrate: 0.8
+  
+  # Learning rate configuration
+  learning_rate:
+    warmup_epochs: 10
+    base_lr: 1.0e-2
+    min_lr: 1.0e-2
+    schedule:
+      100: 1.0e-2
+      1000: 1.0e-3
+      10000: 1.0e-4
+  
+  lbfgs_switch_fraction: 0.9
+  lbfgs_params:
+    lr: 1.0e-2
+    max_iter: 10
+    history_size: 2
+    tolerance_grad: 1.0e-8
+    tolerance_change: 1.0e-8
+  
+  # =============================================================================
+  # NON-UNIFORM PDE COLLOCATION SAMPLING
+  # =============================================================================
+  time_curriculum:
+    enabled: true
+    pde_collocation:
+      n_pde_points: 16
+      concentration_schedule:
+        0: 1.0
+        100: 2.0
+        200: 0.5
+  
+  # =============================================================================
+  # CURRICULUM LEARNING WEIGHT DESIGN (Calibrated for MN System)
+  # =============================================================================
+  initial_weights:
+    train:
+      data: 1.0e-1
+      pde: 6.0e-1
+      initial: 2.0e-1
+      flowrate: 2.0e-1
+      phase: 0.0
+      monotonicity: 1.0e1
+      rate_decrease: 1.0e1
+      min_dynamics: 1.0e1
+    predict:
+      pde: 5.0e01
+      initial: 1.0e-1
+      flowrate: 1.0e-1
+      phase: 0.0
+      monotonicity: 5.0e0
+      rate_decrease: 5.0e0
+      min_dynamics: 5.0e0
+
+  weight_caps:
+    train:
+      data: [1.0e-1, 1.0e1]
+      pde: [1.0e-1, 1.0e1]
+      initial: [1.0e-1, 1.0e1]
+      flowrate: [1.0e-1, 1.0e1]
+      phase: [0.0, 0.0]
+      monotonicity: [1.0e-1, 1.0e1]
+      rate_decrease: [1.0e-1, 1.0e1]
+      min_dynamics: [1.0e-1, 1.0e1]
+    predict:
+      pde: [1.0e-1, 1.0e1]
+      initial: [1.0e-1, 1.0e1]
+      flowrate: [1.0e-1, 1.0e1]
+      phase: [0.0, 0.0]
+      monotonicity: [1.0e-1, 1.0e1]
+      rate_decrease: [1.0e-1, 1.0e1]
+      min_dynamics: [1.0e-1, 1.0e1]
+
+  stages:
+    # =========================================================================
+    # WEIGHT CURRICULUM DESIGN (Log-Scale PDE, No Phase)
+    # =========================================================================
+
+    # =========================================================================
+    # PHASE 1: Data Dominant
+    # =========================================================================
+    0:
+      data: 1.0e-1
+      pde: 6.0e-1
+      initial: 2.0e-1
+      flowrate: 2.0e-1
+      phase: 0.0
+      monotonicity: 1.0e1
+      rate_decrease: 1.0e1
+      min_dynamics: 1.0e1
+    1000:
+      data: 3.0e-1
+      pde: 5.0e-1
+      initial: 8.0e-1
+      flowrate: 1.0e-1
+      phase: 0.0
+      monotonicity: 2.0e1
+      rate_decrease: 2.0e1
+      min_dynamics: 2.0e1
+
+    # =========================================================================
+    # PHASE 2: Balanced
+    # =========================================================================
+    2000:
+      data: 3.5e-1
+      pde: 1.5e-1
+      initial: 6.0e-1
+      flowrate: 2.0e-1
+      phase: 0.0
+      monotonicity: 3.0e1
+      rate_decrease: 3.0e1
+      min_dynamics: 3.0e1
+    3500:
+      data: 4.0e-1
+      pde: 5.0e-1
+      initial: 4.0e-1
+      flowrate: 5.0e-1
+      phase: 0.0
+      monotonicity: 4.0e1
+      rate_decrease: 4.0e1
+      min_dynamics: 4.0e1
+
+    # =========================================================================
+    # PHASE 3: PDE Rising
+    # =========================================================================
+    5000:
+      data: 3.0e-1
+      pde: 1.0e-1
+      initial: 3.0e-1
+      flowrate: 8.0e-1
+      phase: 0.0
+      monotonicity: 2.0e1
+      rate_decrease: 2.0e1
+      min_dynamics: 2.0e1
+    50000:
+      data: 3.0e-1
+      pde: 5.0e-1
+      initial: 1.0e-1
+      flowrate: 2.0e-1
+      phase: 0.0
+      monotonicity: 5.0e1
+      rate_decrease: 5.0e1
+      min_dynamics: 5.0e1
