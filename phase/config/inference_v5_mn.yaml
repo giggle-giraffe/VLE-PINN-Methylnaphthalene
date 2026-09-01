@@ -1,0 +1,48 @@
+# ------------------------------------------------------------------------------------------
+# Inference Configuration for Phase Equilibrium Model
+# ------------------------------------------------------------------------------------------
+
+# Model configuration
+model:
+  name: 'mn'
+  
+  # Version configuration - supports mixed versions
+  clf_version: 'v5.0'      # CLF model version (classification)
+  reg_x_version: 'v5.0'    # REG_X model version (two-phase regression)
+  reg_y_version: 'v5.0'    # REG_Y model version (single-phase regression)
+  
+  # Input variables (features) - must match training
+  input_vars:
+    - 'temp'      # Temperature
+    - 'pres'      # Pressure
+    - 'fh2'       # H2 feed mole fraction
+    - 'fs'        # S feed mole fraction
+    - 'fa'        # Component A feed mole fraction
+    - 'fb'        # Component B feed mole fraction
+    - 'fc'        # Component C feed mole fraction
+    - 'fd'        # Component D feed mole fraction
+
+# Data configuration
+data:
+  # Input test data file (relative to phase/data directory)
+  input_file: 'mn_simulation_data.xlsx'
+
+  # Whether the test data has ground truth labels for error calculation
+  has_ground_truth: true
+  
+  # Whether ground truth is in flow rates (not mole fractions)
+  convert_to_flowrates: false
+
+# Output configuration
+output:
+  output_file: 'validation_results.xlsx'
+  
+  # Save format: 'xlsx' or 'csv'
+  format: 'xlsx'
+
+# Computation settings
+use_gpu: false  # Use GPU if available
+batch_size: 1024  # Batch size for inference (for large datasets)
+
+# Logging
+log_level: 'INFO'  # 'DEBUG', 'INFO', 'WARNING', 'ERROR'

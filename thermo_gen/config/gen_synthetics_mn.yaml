@@ -1,0 +1,81 @@
+# Configuration for synthetic thermodynamic data generation
+# This file defines the parameter ranges and sampling configuration
+
+# Chemical components definition (CAS numbers and flow rate names)
+# Order: H2, S (n-decane), A (methylnaphthalene), B (1-methyltetralin), C (5-methyltetralin), D (methyldecalin)
+chemicals:
+  - cas: '1333-74-0'    # H2
+    name: 'fh2'
+  - cas: '124-18-5'     # S - n-decane
+    name: 'fs'
+  - cas: '1321-94-4'    # A - methylnaphthalene
+    name: 'fa'
+  - cas: '1559-81-5'    # B - 1-methyltetrahydronaphthalene
+    name: 'fb'
+  - cas: '2809-64-5'    # C - 5-methyltetrahydronaphthalene
+    name: 'fc'
+  - cas: '2958-75-0'    # D - methyldecahydronaphthalene
+    name: 'fd'
+
+# Number of grid points per dimension
+# Total samples will be grid_points^8 (8 input dimensions: temp, pres, fh2, fs, fa, fb, fc, fd)
+grid_points: 100
+
+# Batch size for memory-efficient processing (number of samples per batch)
+# Recommended: 10000-50000 for good balance between memory and performance
+batch_size: 10000
+
+# Random seed for reproducibility (not used for grid sampling, kept for compatibility)
+random_seed: 47
+
+# Output configuration
+output:
+  # Output file name (will be saved in thermo_gen/output/)
+  filename: "synthetic_thermo_data.csv"
+  # Whether to include timestamp in filename
+  add_timestamp: false
+
+synthetic_data:
+  # Temperature range in Kelvin
+  temp_range:
+    min: 513.15
+    max: 653.15
+  
+  # Pressure range in Pa
+  pres_range:
+    min: 3000000    # 30e5 Pa
+    max: 7000000    # 70e5 Pa
+  
+  # Flow rate ranges — values are normalized to mole fractions before flash calculation.
+  # Ranges chosen so that the normalized mole fraction grid covers the Aspen validation
+  # data distribution of the Aspen simulation dataset uniformly.
+  flow_rate_ranges:
+    # Hydrogen flow rate — increased max for H2-dominated regime coverage
+    fh2:
+      min: 0.0
+      max: 0.3
+
+    # Solvent (n-decane) flow rate — increased for solvent-rich regime coverage
+    fs:
+      min: 0.0
+      max: 0.3
+
+    # Aromatic compound A (methylnaphthalene) flow rate
+    fa:
+      min: 0.0
+      max: 0.3
+
+    # Product B (1-methyltetrahydronaphthalene) flow rate
+    fb:
+      min: 0.0
+      max: 0.3
+
+    # Product C (5-methyltetrahydronaphthalene) flow rate
+    fc:
+      min: 0.0
+      max: 0.3
+
+    # Product D (methyldecahydronaphthalene) flow rate
+    fd:
+      min: 0.0
+      max: 0.3
